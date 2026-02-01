@@ -25,7 +25,7 @@
                     <div class="inputContainer">
                         <label class="inputLabel inputLabelUnfocused" for="OffVocalKeywords">Off-Vocal Filename Regex</label>
                         <input id="OffVocalKeywords" name="OffVocalKeywords" type="text" is="emby-input" />
-                        <div class="fieldDescription">A regex that is matched against a filename to identify whether it is off-vocal.</div>
+                        <div class="fieldDescription">A pipe-separated (`|`) list of keywords matched against on-disk filenames to identify off-vocal songs.</div>
                     </div>
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
@@ -54,7 +54,7 @@
                 const response = await window.ApiClient.getVirtualFolders();
                 const tvLibraries = response.filter((item) => item.CollectionType === undefined || item.CollectionType === "music");
                 const libraryNames = tvLibraries.map(lib => ({ Value: lib.Name, Text: lib.Name }));
-                generateCheckboxList(libraryNames, config.SelectedSubtitlesLibraries, "libraryMediaCheckboxes");
+                generateCheckboxList(libraryNames, config.SelectedMediaLibraries, "libraryMediaCheckboxes");
             }
 
             function getChecked(wrapperId) {
