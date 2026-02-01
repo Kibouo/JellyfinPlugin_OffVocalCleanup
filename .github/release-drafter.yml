@@ -1,0 +1,8 @@
+_extends: jellyfin-meta-plugins
+
+template: |
+  [Plugin build can be downloaded here](https://repo.jellyfin.org/releases/plugin/subtitle-extract/subtitle-extract_$NEXT_MAJOR_VERSION.0.0.0.zip).
+
+  ## :sparkles: What's New
+
+  $CHANGES

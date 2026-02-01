@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Off-vocal Songs Remover</title>
+</head>
+<body>
+    <div id="OffVocalCleanupConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="OffVocalCleanupConfigForm">
+                    <div class="selectContainer">
+                        <label class="selectLabel" for="ExecutionMode">Execution Mode</label>
+                        <select is="emby-select" id="ExecutionMode" name="ExecutionMode" class="emby-select-withcolor emby-select">
+                            <option id="optAudit" value="Audit">Audit</option>
+                            <option id="optDestructive" value="Destructive">Destructive</option>
+                        </select>
+                    </div>
+                    <div class="folderAccessListContainer" style="margin-bottom: -1em;">
+                        <div class="folderAccess">
+                            <h3 class="checkboxListLabel">Limit search and removal to the following libraries (if nothing is selected, all libraries will be included)</h3>
+                            <div class="checkboxList paperList" style="padding: 0.5em 1em;" id="libraryMediaCheckboxes"></div>
+                        </div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="OffVocalKeywords">Off-Vocal Filename Regex</label>
+                        <input id="OffVocalKeywords" name="OffVocalKeywords" type="text" is="emby-input" />
+                        <div class="fieldDescription">A regex that is matched against a filename to identify whether it is off-vocal.</div>
+                    </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            // Library selector is based on https://github.com/jellyfin/jellyfin-plugin-subtitleextract/blob/master/Jellyfin.Plugin.SubtitleExtract/Configuration/configPage.html
+            function generateCheckboxList(items, selectedItems, containerId) {
+                const container = document.getElementById(containerId);
+                const fragment = document.createDocumentFragment();
+                for (const item of items) {
+                    const label = document.createElement("label");
+                    label.className = "emby-checkbox-label";
+                    label.innerHTML = '<input type="checkbox" is="emby-checkbox"' + (selectedItems.includes(item.Value) ? " checked" : "") + ' value="' + item.Value + '"><span class="checkboxLabel">' + item.Text + '</span>';
+                    fragment.appendChild(label);
+                }
+                container.innerHTML = "";
+                container.appendChild(fragment);
+            }
+
+            async function populateLibraries(config) {
+                const response = await window.ApiClient.getVirtualFolders();
+                const tvLibraries = response.filter((item) => item.CollectionType === undefined || item.CollectionType === "music");
+                const libraryNames = tvLibraries.map(lib => ({ Value: lib.Name, Text: lib.Name }));
+                generateCheckboxList(libraryNames, config.SelectedSubtitlesLibraries, "libraryMediaCheckboxes");
+            }
+
+            function getChecked(wrapperId) {
+                const nodes = document.getElementById(wrapperId).querySelectorAll('input:checked');
+                let values = [];
+
+                for (const node of nodes) {
+                    values.push(node.value);
+                }
+
+                return values;
+            }
+
+            var OffVocalCleanupConfig = {
+                pluginUniqueId: '02b3d064-2cc9-41d1-b983-894b3fab2c47'
+            };
+
+            document.querySelector('#OffVocalCleanupConfigPage').addEventListener('pageshow', function() {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(OffVocalCleanupConfig.pluginUniqueId).then(function (config) {
+                    document.querySelector('#ExecutionMode').value = config.ExecutionMode;
+                    populateLibraries(config);
+                    document.querySelector('#OffVocalKeywords').value = config.OffVocalKeywords;
+
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            document.querySelector('#OffVocalCleanupConfigForm').addEventListener('submit', function(e) {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(OffVocalCleanupConfig.pluginUniqueId).then(function (config) {
+                    config.ExecutionMode = document.querySelector('#ExecutionMode').value;
+                    config.SelectedMediaLibraries = getChecked('libraryMediaCheckboxes');
+                    config.OffVocalKeywords = document.querySelector('#OffVocalKeywords').value;
+
+                    ApiClient.updatePluginConfiguration(OffVocalCleanupConfig.pluginUniqueId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+
+                e.preventDefault();
+                return false;
+            });
+        </script>
+    </div>
+</body>
+</html>
