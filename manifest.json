@@ -8,11 +8,11 @@
         "overview": "Scans the Media Library for off-vocal tracks and deletes them.",
         "versions": [
             {
-                "checksum": "46d2dd74318108b551f309600bd12c81",
-                "changelog": "0.2.0 - Implement logging and actual deletion function",
+                "checksum": "4ab825577c2ee9181aef77581b45348f",
+                "changelog": "0.2.1 - Improve logging",
                 "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/Kibouo/JellyfinPlugin_OffVocalCleanup/releases/download/0.2.0/offvocalcleanup_0.2.0.0.zip",
-                "version": "0.2.0.0"
+                "sourceUrl": "https://github.com/Kibouo/JellyfinPlugin_OffVocalCleanup/releases/download/0.2.1/offvocalcleanup_0.2.1.0.zip",
+                "version": "0.2.1.0"
             }
         ]
     }
