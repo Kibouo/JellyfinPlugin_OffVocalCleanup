@@ -78,35 +78,48 @@ public class DeleteOffVocalSongsTask : IScheduledTask
             // In case parent ids are found, run the extraction on each found library
             foreach (var parentId in parentIds)
             {
-                startProgress = await ProcessWithProgress(progress, parentId, parentIds, startProgress, cancellationToken).ConfigureAwait(false);
+                startProgress = ProcessWithProgress(progress, parentId, parentIds, startProgress, cancellationToken);
             }
         }
         else
         {
             // Otherwise run it on everything
-            await ProcessWithProgress(progress, null, [], startProgress, cancellationToken).ConfigureAwait(false);
+            ProcessWithProgress(progress, null, [], startProgress, cancellationToken);
         }
 
         progress.Report(100);
+
+        // no async code but the interface expects this function to be async...
+        await Task.FromResult(false).ConfigureAwait(false);
     }
 
-    private async Task<double> ProcessWithProgress(
+    private double ProcessWithProgress(
         IProgress<double> progress,
         Guid? parentId,
         Guid[] parentIds,
         double startProgress,
         CancellationToken cancellationToken)
     {
-        var config = Plugin.Instance.Configuration;
-
-        var libsCount = parentIds.Length > 0 ? parentIds.Length : 1;
+        // re-used values
         var queryPageLimit = 100;
-        var keywords = config.OffVocalKeywords.Split("|");
-        var keywordsCount = keywords.Length;
+        var config = Plugin.Instance.Configuration;
+        _logger.LogInformation("Execution mode: {ExecutionMode}", config.ExecutionMode);
 
+        // data to process
+        var keywords = config.OffVocalKeywords.Split("|");
+        _logger.LogDebug("Keyword(s) to look for in filenames: {Keywords}", keywords);
+
+        // progress reporting
+        var libsCount = parentIds.Length > 0 ? parentIds.Length : 1;
         var completedKeywords = 0;
+        var keywordsCount = keywords.Length;
+        _logger.LogDebug("Amount of keywords: {KeywordsCount}", keywordsCount);
+
+        // start work
         foreach (var keyword in keywords)
         {
+            // DB query for keyword
+            _logger.LogDebug("Now querying for keyword: {Keyword}", keyword);
             var query = new InternalItemsQuery
             {
                 Recursive = true,
@@ -123,40 +136,50 @@ public class DeleteOffVocalSongsTask : IScheduledTask
                 query.ParentId = parentId.Value;
             }
 
+            // pagination result
+            var entriesForKeyword = new List<BaseItem>();
+            // pagination helpers
             var startIndex = 0;
             var queryResultLength = _libraryManager.GetCount(query);
-
-            var completedEntries = 0;
+            _logger.LogDebug("Resulting amount of matched files: {QueryResultLength}", queryResultLength);
+            // pagination processing
             while (startIndex < queryResultLength)
             {
                 query.StartIndex = startIndex;
-                var entries = _libraryManager.GetItemList(query);
 
-                foreach (var entry in entries)
+                foreach (var entry in _libraryManager.GetItemList(query))
                 {
+                    entriesForKeyword.Add(entry);
+
+                    // report the progress using "startProgress" that allows to track progress across multiple libraries
+                    progress.Report(startProgress + (100d * entriesForKeyword.Count / queryResultLength / completedKeywords / keywordsCount / libsCount));
+                    // check if user cancelled
                     cancellationToken.ThrowIfCancellationRequested();
-
-                    if (config.ExecutionMode == Configuration.ExecutionMode.Audit)
-                    {
-                        _logger.LogInformation("Would delete file {BaseItem}", entry);
-                        await Task.FromResult(false).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        // TODO:
-                        await Task.FromResult(false).ConfigureAwait(false);
-                    }
-
-                    completedEntries++;
-                    // Report the progress using "startProgress" that allows to track progress across multiple libraries
-                    progress.Report(startProgress + (100d * completedEntries / queryResultLength / completedKeywords / keywordsCount / libsCount));
                 }
 
                 startIndex += queryPageLimit;
             }
+
+            _logger.LogInformation("Keyword {Keyword} matched {FileCount} file(s).", keyword, entriesForKeyword.Count);
+            _logger.LogDebug("Matched files: {EntriesForKeyword}", entriesForKeyword);
+            if (config.ExecutionMode == Configuration.ExecutionMode.Destructive)
+            {
+                var deleteOptions = new DeleteOptions { DeleteFileLocation = true };
+                foreach (var entry in entriesForKeyword)
+                {
+                    try
+                    {
+                        _libraryManager.DeleteItem(entry, deleteOptions, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error deleting item: {Entry} ({Path})", entry, entry.Path);
+                    }
+                }
+            }
         }
 
-        // When done, update the startProgress to the current progress for next libraries
+        // update the startProgress to the current progress for next libraries
         startProgress += 100d / libsCount;
         return startProgress;
     }
