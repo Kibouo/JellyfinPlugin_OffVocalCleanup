@@ -30,7 +30,7 @@ public class PluginConfiguration : BasePluginConfiguration
     {
         ExecutionMode = ExecutionMode.Audit;
         SelectedMediaLibraries = [];
-        OffVocalKeywords = "karaoke|カラオケ|offvocal|off vocal|off-vocal|オフボーカル|instrumental|instr.|インストゥルメンタル|accoustic|acoustic|acapella|アカペラ|orchestra|オーケストラ";
+        OffVocalKeywords = "karaoke|カラオケ|offvocal|off vocal|off-vocal|オフボーカル|instrumental|instr.|インストゥルメンタル|accoustic|acoustic|acapella|アカペラ|orchestral|オーケストラ";
     }
 
     /// <summary>

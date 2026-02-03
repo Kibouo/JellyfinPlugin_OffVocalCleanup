@@ -107,7 +107,7 @@ public class DeleteOffVocalSongsTask : IScheduledTask
 
         // data to process
         var keywords = config.OffVocalKeywords.Split("|");
-        _logger.LogDebug("Keyword(s) to look for in filenames: {Keywords}", keywords);
+        _logger.LogDebug("Keyword(s) to look for in filenames: {Keywords}", config.OffVocalKeywords);
 
         // progress reporting
         var libsCount = parentIds.Length > 0 ? parentIds.Length : 1;
@@ -141,7 +141,6 @@ public class DeleteOffVocalSongsTask : IScheduledTask
             // pagination helpers
             var startIndex = 0;
             var queryResultLength = _libraryManager.GetCount(query);
-            _logger.LogDebug("Resulting amount of matched files: {QueryResultLength}", queryResultLength);
             // pagination processing
             while (startIndex < queryResultLength)
             {
@@ -174,6 +173,10 @@ public class DeleteOffVocalSongsTask : IScheduledTask
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Error deleting item: {Entry} ({Path})", entry, entry.Path);
+                    }
+                    finally
+                    {
+                        _logger.LogDebug("Deleted item: {Entry} ({Path})", entry, entry.Path);
                     }
                 }
             }
