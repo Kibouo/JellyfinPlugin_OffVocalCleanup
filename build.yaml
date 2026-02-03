@@ -1,9 +1,9 @@
 ---
 name: "OffVocalCleanup"
 guid: "02b3d064-2cc9-41d1-b983-894b3fab2c47"
-version: "0.1.0"
-targetAbi: "10.9.0.0"
-framework: "net8.0"
+version: "0.1.1"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
 overview: "Scans the Media Library for off-vocal tracks and deletes them."
 description: >
   Scans the Media Library for off-vocal tracks and deletes them.
@@ -11,5 +11,3 @@ category: "Music"
 owner: "Kibouo"
 artifacts:
 - "Jellyfin.Plugin.OffVocalCleanup.dll"
-changelog: >
-  0.1.0 - Initial release
