@@ -1,4 +1,3 @@
----
 name: "OffVocalCleanup"
 guid: "02b3d064-2cc9-41d1-b983-894b3fab2c47"
 version: "0.1.1"
@@ -11,3 +10,5 @@ category: "Music"
 owner: "Kibouo"
 artifacts:
 - "Jellyfin.Plugin.OffVocalCleanup.dll"
+changelog: >
+  0.1.1 - Fixed library selection in settings page and Jellyfin dependencies
