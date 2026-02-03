@@ -138,7 +138,7 @@ public class DeleteOffVocalSongsTask : IScheduledTask
 
                     if (config.ExecutionMode == Configuration.ExecutionMode.Audit)
                     {
-                        _logger.LogDebug("Would delete file {BaseItem}", entry);
+                        _logger.LogInformation("Would delete file {BaseItem}", entry);
                         await Task.FromResult(false).ConfigureAwait(false);
                     }
                     else
